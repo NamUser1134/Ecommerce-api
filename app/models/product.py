@@ -22,3 +22,7 @@ class Product:
     @staticmethod
     def delete(product_id):
         mongo.db.products.delete_one({"_id": ObjectId(product_id)})
+
+    @staticmethod
+    def find_coming_soon():
+        return list(mongo.db.products.find({"is_coming_soon": True}))

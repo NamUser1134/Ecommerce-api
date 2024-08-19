@@ -2,6 +2,7 @@ from flask import request, jsonify
 from app import app, products_collection
 from bson import json_util, ObjectId
 import json
+from datetime import datetime, timezone
 
 @app.route('/', methods=['GET'])
 def home():
@@ -21,6 +22,12 @@ def create_product():
         for field in required_fields:
             if field not in product_data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
+            
+            
+        # Tự động tạo created_at và release_date nếu không có trong request
+        current_time = datetime.now(timezone.utc)  # Get current time in UTC
+        product_data['created_at'] = product_data.get('created_at', current_time.isoformat())
+        product_data['release_date'] = product_data.get('release_date', current_time.isoformat())
 
         # Thêm sản phẩm vào database
         result = products_collection.insert_one(product_data)
@@ -57,6 +64,14 @@ def get_product(product_id):
 def update_product(product_id):
     try:
         product_data = request.json
+
+        # Tự động tạo created_at và release_date nếu không có trong request
+        current_time = datetime.now(timezone.utc)  # Get current time in UTC
+        if 'created_at' not in product_data:
+            product_data['created_at'] = current_time.isoformat()
+        if 'release_date' not in product_data:
+            product_data['release_date'] = current_time.isoformat()
+
         result = products_collection.update_one(
             {"_id": ObjectId(product_id)},
             {"$set": product_data}
@@ -76,5 +91,14 @@ def delete_product(product_id):
             return jsonify({"message": "Product deleted successfully"}), 200
         else:
             return jsonify({"error": "Product not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# Route to get all "coming soon" products
+@app.route('/products/coming-soon', methods=['GET'])
+def get_coming_soon_products():
+    try:
+        coming_soon_products = list(products_collection.find({"is_coming_soon": True}))
+        return json.loads(json_util.dumps(coming_soon_products)), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
