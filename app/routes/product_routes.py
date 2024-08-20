@@ -102,3 +102,12 @@ def get_coming_soon_products():
         return json.loads(json_util.dumps(coming_soon_products)), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# Route to get all "latest product" products
+@app.route('/products/latest', methods=['GET'])
+def get_latest_products():
+    try:
+        latest_products = list(products_collection.find({"is_coming_soon": False}))
+        return json.loads(json_util.dumps(latest_products)), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

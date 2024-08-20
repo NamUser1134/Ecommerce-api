@@ -26,3 +26,7 @@ class Product:
     @staticmethod
     def find_coming_soon():
         return list(mongo.db.products.find({"is_coming_soon": True}))
+    
+    @staticmethod
+    def find_latest_product():
+        return list(mongo.db.products.find({"is_coming_soon": False}))
