@@ -117,3 +117,46 @@ def get_latest_products():
         return json.loads(json_util.dumps(latest_products)), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@product_bp.route('/products/search', methods=['GET'])
+def search_products():
+    try:
+        # Lấy query từ tham số URL
+        query = request.args.get('q', '')
+
+        # Nếu không có query, trả về lỗi
+        if not query:
+            return jsonify({"error": "Vui lòng cung cấp từ khóa tìm kiếm"}), 400
+
+        # Tìm kiếm sản phẩm
+        results = Product.search(products_collection, query)
+
+        # Trả về kết quả tìm kiếm dưới dạng JSON
+        return json.loads(json_util.dumps(results)), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@product_bp.route('/products/paginated', methods=['GET'])
+def get_paginated_products():
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+
+        if page < 1 or per_page < 1:
+            return jsonify({"error": "Invalid page or per_page parameters"}), 400
+
+        paginated_result = Product.find_paginated(products_collection, page, per_page)
+        
+        # Convert ObjectId to string for JSON serialization
+        for product in paginated_result['products']:
+            product['_id'] = str(product['_id'])
+
+        return jsonify({
+            'products': paginated_result['products'],
+            'page': paginated_result['page'],
+            'per_page': paginated_result['per_page'],
+            'total': paginated_result['total'],
+            'total_pages': paginated_result['total_pages']
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -1,4 +1,5 @@
 from bson import ObjectId
+from math import ceil
 
 class Product:
     @staticmethod
@@ -29,3 +30,28 @@ class Product:
     @staticmethod
     def find_latest_product(products_collection):
         return list(products_collection.find({"is_coming_soon": False}))
+    
+    @staticmethod
+    def search(products_collection, query):
+        # Tìm kiếm sản phẩm theo tên hoặc mô tả
+        search_query = {
+            "$or": [
+                {"name": {"$regex": query, "$options": "i"}},  # Tìm theo tên, không phân biệt hoa thường
+                {"description": {"$regex": query, "$options": "i"}}  # Tìm theo mô tả, không phân biệt hoa thường
+            ]
+        }
+        return list(products_collection.find(search_query))
+
+    @staticmethod
+    def find_paginated(products_collection, page, per_page):
+        total = products_collection.count_documents({})
+        total_pages = ceil(total / per_page)
+        skip = (page - 1) * per_page
+        products = list(products_collection.find().skip(skip).limit(per_page))
+        return {
+            'products': products,
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'total_pages': total_pages
+        }
