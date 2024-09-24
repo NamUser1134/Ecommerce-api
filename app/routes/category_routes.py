@@ -59,7 +59,18 @@ def delete_category_route(category_id):
 @category_bp.route('/categories/<int:category_id>/products', methods=['GET'])
 def get_products_by_category(category_id):
     try:
-        products = list(products_collection.find({"category_id": category_id}))
+        # Get page and per_page from query parameters with default values
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+        
+        # Calculate the number of products to skip
+        skip = (page - 1) * per_page
+
+        # Fetch products from MongoDB with pagination
+        products_cursor = products_collection.find({"category_id": category_id}).skip(skip).limit(per_page)
+        products = list(products_cursor)
+
+        # Serialize and return the products
         return jsonify([serialize_product(product) for product in products])
     except Exception as e:
         return jsonify({"error": str(e)}), 500

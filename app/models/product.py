@@ -32,7 +32,7 @@ class Product:
         return list(products_collection.find({"is_coming_soon": False}))
     
     @staticmethod
-    def search(products_collection, query):
+    def search(products_collection, query, page, per_page):
         # Tìm kiếm sản phẩm theo tên hoặc mô tả
         search_query = {
             "$or": [
@@ -40,7 +40,13 @@ class Product:
                 {"description": {"$regex": query, "$options": "i"}}  # Tìm theo mô tả, không phân biệt hoa thường
             ]
         }
-        return list(products_collection.find(search_query))
+        # Đếm tổng số kết quả
+        total_results = products_collection.count_documents(search_query)
+        # Sử dụng skip và limit để phân trang
+        results = list(products_collection.find(search_query)
+                    .skip((page - 1) * per_page)
+                    .limit(per_page))
+        return results, total_results
 
     @staticmethod
     def find_paginated(products_collection, page, per_page):

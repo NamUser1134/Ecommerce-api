@@ -121,18 +121,27 @@ def get_latest_products():
 @product_bp.route('/products/search', methods=['GET'])
 def search_products():
     try:
-        # Lấy query từ tham số URL
+        # Lấy các query từ tham số URL
         query = request.args.get('q', '')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
 
         # Nếu không có query, trả về lỗi
         if not query:
             return jsonify({"error": "Vui lòng cung cấp từ khóa tìm kiếm"}), 400
 
-        # Tìm kiếm sản phẩm
-        results = Product.search(products_collection, query)
+        # Tìm kiếm sản phẩm với phân trang
+        results, total_results = Product.search(products_collection, query, page, per_page)
 
-        # Trả về kết quả tìm kiếm dưới dạng JSON
-        return json.loads(json_util.dumps(results)), 200
+        # Trả về kết quả tìm kiếm dưới dạng JSON kèm theo thông tin phân trang
+        response = {
+            "results": json.loads(json_util.dumps(results)),
+            "total_results": total_results,
+            "current_page": page,
+            "per_page": per_page,
+            "total_pages": (total_results + per_page - 1) // per_page  # Tính tổng số trang
+        }
+        return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
