@@ -22,14 +22,18 @@ db = client['online_shop']
 categories_collection = db['categories']
 products_collection = db['products']
 brands_collection = db['brands']  # Add this line to initialize the brands collection
+users_collection = db['users']
 
 
 # Import routes AFTER the collections and app are initialized
 from app.routes.product_routes import product_bp
 from app.routes.category_routes import category_bp
 from app.routes.brand_routes import brand_bp  # New line for brands
+from app.routes.user_routes import user_bp
 
 # Register the blueprints
 app.register_blueprint(product_bp)
 app.register_blueprint(category_bp)
 app.register_blueprint(brand_bp)  # New line for registering the brands blueprint
+app.register_blueprint(user_bp)
+
