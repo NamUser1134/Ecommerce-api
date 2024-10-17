@@ -41,18 +41,23 @@ def login():
         if not user or not User.check_password(user, password):
             return jsonify({"error": "Invalid email or password"}), 401
 
-        # Create JWT token
-        access_token = create_access_token(identity=str(user['_id']))
+        # Tùy chỉnh các trường trong access_token
+        custom_claims = {
+            "user_id": str(user['_id']),
+            "name": user['name'],
+            # Thêm các trường khác mà bạn muốn đưa vào token
+        }
+        access_token = create_access_token(identity=custom_claims)
         return jsonify({"access_token": access_token}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Get user details (protected route)
+        return jsonify({"error": str(e)}), 500# Get user details (protected route)
+    
 @user_bp.route('/user', methods=['GET'])
 @jwt_required()
 def get_user():
     try:
-        user_id = get_jwt_identity()
+        claims = get_jwt_identity()
+        user_id = claims['user_id']
         user = User.find_by_id(users_collection, user_id)
         if user:
             return json.loads(json_util.dumps(user)), 200
@@ -61,11 +66,9 @@ def get_user():
         return jsonify({"error": str(e)}), 500
 
 # Update user (protected route)
-@user_bp.route('/user', methods=['PUT'])
-@jwt_required()
-def update_user():
+@user_bp.route('/user/<user_id>', methods=['PUT'])
+def update_user(user_id):
     try:
-        user_id = get_jwt_identity()
         user_data = request.json
 
         # Update user information
@@ -73,15 +76,11 @@ def update_user():
         return jsonify({"message": "User updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 # Delete user (protected route)
-@user_bp.route('/user', methods=['DELETE'])
-@jwt_required()
-def delete_user():
+@user_bp.route('/user/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
     try:
-        user_id = get_jwt_identity()
-
-        # Delete user by ID
+        # Xóa người dùng theo ID
         User.delete(users_collection, user_id)
         return jsonify({"message": "User deleted successfully"}), 200
     except Exception as e:
