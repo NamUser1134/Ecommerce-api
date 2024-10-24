@@ -19,10 +19,10 @@ class User:
 
     @staticmethod
     def update(users_collection, user_id, user_data):
-        # If password is in the user_data, hash it before updating
+        # Hash the password if provided
         if 'password' in user_data:
             user_data['password'] = generate_password_hash(user_data['password'])
-        
+
         # Update the user data in the database
         users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": user_data})
 
