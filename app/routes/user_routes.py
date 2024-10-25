@@ -58,7 +58,8 @@ def login():
         custom_claims = {
             "user_id": str(user['_id']), 
             "name": user['name'],
-            "role": user['role']
+            "role": user['role'],
+            "image_id": user['image_id']
         }
         access_token = create_access_token(identity=custom_claims)
         return jsonify({"access_token": access_token}), 200
