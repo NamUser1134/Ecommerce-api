@@ -16,7 +16,7 @@ user_bp = Blueprint('user_bp', __name__)
 def register():
     try:
         user_data = request.form.to_dict()
-        required_fields = ['email', 'password', 'name', 'role']
+        required_fields = ['email', 'password', 'name']
 
         # Validate required fields
         for field in required_fields:
