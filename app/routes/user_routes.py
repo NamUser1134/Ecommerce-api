@@ -11,33 +11,37 @@ import json
 
 user_bp = Blueprint('user_bp', __name__)
 
-# Register a new user with an image and role
 @user_bp.route('/register', methods=['POST'])
 def register():
     try:
         user_data = request.form.to_dict()
         required_fields = ['email', 'password', 'name']
 
-        # Validate required fields
+        # Kiểm tra các trường bắt buộc
         for field in required_fields:
             if field not in user_data:
-                return jsonify({"error": f"Missing field: {field}"}), 400
+                return jsonify({"error": f"Thiếu trường: {field}"}), 400
 
-        # Check if email already exists
+        # Kiểm tra email đã tồn tại hay chưa
         if User.find_by_email(users_collection, user_data['email']):
-            return jsonify({"error": "Email already exists"}), 400
+            return jsonify({"error": "Email đã tồn tại"}), 400
 
-        # Handle the image file if provided
-        if 'image' in request.files:
+        # Xử lý tệp hình ảnh nếu được cung cấp
+        image_id = None
+        if 'image' in request.files and request.files['image'].filename != '':
             image_file = request.files['image']
             image_id = Image.create(images_collection, {}, image_file)
-            user_data['image_id'] = image_id  # Link user to image
         
-        # Create the user
+        # Thêm image_id vào dữ liệu người dùng nếu có
+        if image_id:
+            user_data['image_id'] = image_id
+        
+        # Tạo người dùng
         user_id = User.create(users_collection, user_data)
-        return jsonify({"message": "User registered successfully", "id": user_id}), 201
+        return jsonify({"message": "Đăng ký người dùng thành công", "id": user_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     
 # User login route
 @user_bp.route('/login', methods=['POST'])
